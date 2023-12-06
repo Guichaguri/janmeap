@@ -102,7 +102,7 @@ bool nmea_read_coordinate(char **message, nmea_coordinate_t *coord) {
 
 	if (readable) {
 		coord->degrees = ((*message)[0] - '0') * 10 + ((*message)[1] - '0');
-		coord->decimal_minutes = strtod(*message + 2, end);
+		coord->decimal_minutes = atof(*message + 2);
 	}
 
 	*message = end + 1;

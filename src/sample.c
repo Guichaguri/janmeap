@@ -129,11 +129,11 @@ static inline void process_nmea_gll(char *message) {
 	nmea_read_char(&message, &gps_east_west);
 
 	// Time (hhmmss.ss)
-	gps_read_float(&message, &gps_time);
+	nmea_read_float(&message, &gps_time);
 
 	// Validity (A/V)
 	char validity;
-	gps_read_char(&message, &validity);
+	nmea_read_char(&message, &validity);
 	if (validity != 'A') {
 		// do something?
 	}
@@ -144,6 +144,8 @@ static inline void process_nmea_gll(char *message) {
 static inline void process_nmea_message(char *message, int length) {
 	char type[4];
 	nmea_read_string(&message, type, 4);
+
+	printf("Parsing %s\n", type);
 
 	if (memcmp(type, "RMC", 3) == 0) {
 		process_nmea_rmc(message);
@@ -170,4 +172,7 @@ void main() {
 	for (int i = 0; i < strlen(str); i++) {
 		nmea_reader_add_char(&reader, str[i]);
 	}
+
+	printf("Last Lat: %i %f %c\n", gps_latitude.degrees, gps_latitude.decimal_minutes, gps_north_south);
+	printf("Last Lon: %i %f %c\n", gps_longitude.degrees, gps_longitude.decimal_minutes, gps_east_west);
 }
