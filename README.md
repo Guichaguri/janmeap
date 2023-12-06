@@ -1,13 +1,14 @@
 # Just Another NMEA Parser
 
-A NMEA streaming and parsing library in C99.
+An NMEA 0183 streaming and parsing library written in plain C.
 
 ## Features
 - Allows streaming characters one by one
-- Can parse any NMEA message
+- Can parse any NMEA 0183 message
 - Validates checksums
 - Allocation free
 - Plain C99
+- Designed to be used in microcontrollers
 
 ## Usage
 
@@ -83,3 +84,49 @@ void process_nmea_msg(char *message, int length) {
 ```
 
 A full and functional example can be seen in the `sample.c` file.
+
+### Streaming with STM32 UART
+
+This is a more practical example that uses the STM32 UART HAL library to read one character by one and feed it to the library
+
+```c
+nmea_reader_t reader;
+char gps_buffer;
+bool gps_done = 0;
+
+void main() {
+    // Peripheral setup
+    // ...
+
+    // Creates the reader
+    nmea_reader_init(&reader, process_nmea_msg);
+
+    // Start reading the UART
+    HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
+
+    while(1) {
+
+        if (uart_done) {
+            // Appends the read char to the reader
+            nmea_reader_add_char(&reader, gps_buffer);
+
+            // Receives a new char
+            uart_done = 0;
+            HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
+        }
+
+    }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    // Called when the UART completes reading
+    // Sets the flag to process the character in the next main loop
+    uart_done = 1;
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+    // An error happened while receiving, we'll just restart everything
+    nmea_reader_clear(&reader);
+    HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
+}
+```
