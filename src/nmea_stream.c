@@ -1,7 +1,7 @@
-
+#include <stdlib.h>
 #include "nmea.h"
 
-static void nmea_process(struct nmea_reader *reader);
+static void nmea_process(nmea_reader_t *reader);
 static int hex2int(char c);
 
 void nmea_reader_init(nmea_reader_t *reader, nmea_process_message_t process_message) {

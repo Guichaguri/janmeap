@@ -13,24 +13,23 @@ float gps_altitude_meters = 0; // Meters
 float gps_speed_over_ground_knots = 0; // Knots
 float gps_speed_over_ground_km_h = 0; // Km/h
 float gps_track_angle_degrees = 0; // Degrees
-float gps_time = 0; // hhmmss.ss
-uint32_t gps_stm_time = 0; // ms
-uint32_t gps_date = 0; // ddmmyy
+nmea_time_t gps_time;
+nmea_date_t gps_date;
 
 static inline void process_nmea_gga(char *message) {
 	// $GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M,,*47
 
 	// Time (hhmmss.ss)
-	nmea_read_float(&message, &gps_time);
+	nmea_read_time(&message, &gps_time);
 
 	// Latitude (ddmm.mmmm)
-	nmea_read_coordinate(&message, &gps_latitude);
+	nmea_read_latitude(&message, &gps_latitude);
 
 	// North/South (N/S)
 	nmea_read_char(&message, &gps_north_south);
 
-	// Longitude (ddmm.mmmm)
-	nmea_read_coordinate(&message, &gps_longitude);
+	// Longitude (dddmm.mmmm)
+	nmea_read_longitude(&message, &gps_longitude);
 
 	// East/West (E/W)
 	nmea_read_char(&message, &gps_east_west);
@@ -54,7 +53,7 @@ static inline void process_nmea_rmc(char *message) {
 	// $GNRMC,001031.00,A,4404.13993,N,12118.86023,W,0.146,,100117,,,A*7B
 
 	// Time (hhmmss.ss)
-	nmea_read_float(&message, &gps_time);
+	nmea_read_time(&message, &gps_time);
 
 	// Validity (A/V)
 	char validity;
@@ -64,13 +63,13 @@ static inline void process_nmea_rmc(char *message) {
 	}
 
 	// Latitude (ddmm.mmmm)
-	nmea_read_coordinate(&message, &gps_latitude);
+	nmea_read_latitude(&message, &gps_latitude);
 
 	// North/South (N/S)
 	nmea_read_char(&message, &gps_north_south);
 
-	// Longitude (ddmm.mmmm)
-	nmea_read_coordinate(&message, &gps_longitude);
+	// Longitude (dddmm.mmmm)
+	nmea_read_longitude(&message, &gps_longitude);
 
 	// East/West
 	nmea_read_char(&message, &gps_east_west);
@@ -82,7 +81,7 @@ static inline void process_nmea_rmc(char *message) {
 	nmea_read_float(&message, &gps_track_angle_degrees);
 
 	// Date (ddmmyy)
-	nmea_read_uint32(&message, &gps_date);
+	nmea_read_date(&message, &gps_date);
 
 	// I don't care about the rest
 }
@@ -115,21 +114,22 @@ static inline void process_nmea_vtg(char *message) {
 }
 
 static inline void process_nmea_gll(char *message) {
-
+	// $GNGLL,4404.14012,N,12118.85993,W,001037.00,A,A*67
+	
 	// Latitude (ddmm.mmmm)
-	nmea_read_coordinate(&message, &gps_latitude);
+	nmea_read_latitude(&message, &gps_latitude);
 
 	// North/South (N/S)
 	nmea_read_char(&message, &gps_north_south);
 
-	// Longitude (ddmm.mmmm)
-	nmea_read_coordinate(&message, &gps_longitude);
+	// Longitude (dddmm.mmmm)
+	nmea_read_longitude(&message, &gps_longitude);
 
 	// East/West (E/W)
 	nmea_read_char(&message, &gps_east_west);
 
 	// Time (hhmmss.ss)
-	nmea_read_float(&message, &gps_time);
+	nmea_read_time(&message, &gps_time);
 
 	// Validity (A/V)
 	char validity;
@@ -175,4 +175,6 @@ void main() {
 
 	printf("Last Lat: %i %f %c\n", gps_latitude.degrees, gps_latitude.decimal_minutes, gps_north_south);
 	printf("Last Lon: %i %f %c\n", gps_longitude.degrees, gps_longitude.decimal_minutes, gps_east_west);
+	printf("Date: %i/%i/%i\n", gps_date.date, gps_date.month, gps_date.year);
+	printf("Time: %i:%i:%.2f\n", gps_time.hours, gps_time.minutes, gps_time.seconds);
 }

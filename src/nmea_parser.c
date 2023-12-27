@@ -1,4 +1,3 @@
-
 #include "nmea.h"
 
 #if NMEA_PARSER
@@ -95,16 +94,64 @@ int nmea_read_string(char **message, char *str, int max_length) {
 	return max_length;
 }
 
-bool nmea_read_coordinate(char **message, nmea_coordinate_t *coord) {
+bool nmea_read_coordinate(char **message, nmea_coordinate_t *coord, bool deg_3_digits) {
+	// ddmm.mm or dddmm.mm
 	char *end = nmea_find_delimiter(*message);
 	int length = end - *message;
 	bool readable = length >= 3;
 
 	if (readable) {
-		coord->degrees = ((*message)[0] - '0') * 10 + ((*message)[1] - '0');
-		coord->decimal_minutes = atof(*message + 2);
+		if (deg_3_digits) {
+			coord->degrees = ((*message)[0] - '0') * 100 + ((*message)[1] - '0') * 10 + ((*message)[2] - '0');
+			coord->decimal_minutes = atof(*message + 3);
+		} else {
+			coord->degrees = ((*message)[0] - '0') * 10 + ((*message)[1] - '0');
+			coord->decimal_minutes = atof(*message + 2);
+		}
 	}
 
+	*message = end + 1;
+
+	return readable;
+}
+
+inline bool nmea_read_latitude(char **message, nmea_coordinate_t *coord) {
+	return nmea_read_coordinate(message, coord, false);
+}
+
+inline bool nmea_read_longitude(char **message, nmea_coordinate_t *coord) {
+	return nmea_read_coordinate(message, coord, true);
+}
+
+bool nmea_read_date(char **message, nmea_date_t *date) {
+	// ddmmyy
+	char *end = nmea_find_delimiter(*message);
+	int length = end - *message;
+	bool readable = length >= 6;
+
+	if (readable) {
+		date->date = ((*message)[0] - '0') * 10 + ((*message)[1] - '0');
+		date->month = ((*message)[2] - '0') * 10 + ((*message)[3] - '0');
+		date->year = ((*message)[4] - '0') * 10 + ((*message)[5] - '0');
+	}
+	
+	*message = end + 1;
+
+	return readable;
+}
+
+bool nmea_read_time(char **message, nmea_time_t *time) {
+	// ddmmyy
+	char *end = nmea_find_delimiter(*message);
+	int length = end - *message;
+	bool readable = length >= 6;
+
+	if (readable) {
+		time->hours = ((*message)[0] - '0') * 10 + ((*message)[1] - '0');
+		time->minutes = ((*message)[2] - '0') * 10 + ((*message)[3] - '0');
+		time->seconds = (float) atof((*message) + 4);
+	}
+	
 	*message = end + 1;
 
 	return readable;
@@ -128,6 +175,10 @@ void nmea_get_coordinate_dms(nmea_coordinate_t coord, uint8_t *degrees, uint8_t 
 void nmea_get_coordinate_dmm(nmea_coordinate_t coord, uint8_t *degrees, double *decimal_minutes) {
 	*degrees = coord.degrees;
 	*decimal_minutes = coord.decimal_minutes;
+}
+
+void nmea_get_time_ms(nmea_time_t time, uint32_t *milliseconds) {
+	*milliseconds = time.hours * 3600000 + time.minutes * 60000 + (uint32_t)(time.seconds * 1000);
 }
 
 #endif // NMEA_PARSER_UTILITIES

@@ -9,6 +9,7 @@ An NMEA 0183 streaming and parsing library written in plain C.
 - Allocation free
 - Plain C99
 - Designed to be used in microcontrollers
+- Parses coordinates, timestamps, integers, floats and strings
 
 ## Usage
 
@@ -56,27 +57,27 @@ void process_nmea_msg(char *message, int length) {
 
         // Latitude (ddmm.mmmm)
         nmea_coordinate_t latitude;
-        nmea_read_coordinate(&message, &latitude);
+        nmea_read_latitude(&message, &latitude);
 
         // North/South (N/S)
         char north_south;
         nmea_read_char(&message, &north_south);
 
-        // Longitude (ddmm.mmmm)
+        // Longitude (dddmm.mmmm)
         nmea_coordinate_t longitude;
-        nmea_read_coordinate(&message, &longitude);
+        nmea_read_longitude(&message, &longitude);
 
         // East/West (E/W)
         char east_west;
         nmea_read_char(&message, &east_west);
 
         // Time (hhmmss.ss)
-        float time;
-        gps_read_float(&message, &time);
+        nmea_time_t time;
+        nmea_read_time(&message, &time);
 
         // Validity (A/V)
         char validity;
-        gps_read_char(&message, &validity);
+        nmea_read_char(&message, &validity);
 
         // ...
     }
