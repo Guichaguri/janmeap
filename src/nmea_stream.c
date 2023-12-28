@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include "nmea.h"
 
-static void nmea_process(nmea_reader_t *reader);
 static int hex2int(char c);
 
 void nmea_reader_init(nmea_reader_t *reader, nmea_process_message_t process_message) {
@@ -13,6 +12,11 @@ void nmea_reader_init(nmea_reader_t *reader, nmea_process_message_t process_mess
 
 void nmea_reader_set_error_callback(nmea_reader_t *reader, nmea_process_error_t process_error) {
 	reader->process_error = process_error;
+}
+
+void nmea_reader_process_char(nmea_reader_t *reader, char c) {
+	nmea_reader_add_char(reader, c);
+	nmea_reader_process(reader);
 }
 
 void nmea_reader_add_char(nmea_reader_t *reader, char c) {
@@ -28,8 +32,6 @@ void nmea_reader_add_char(nmea_reader_t *reader, char c) {
 
   *(reader->buffer + reader->length) = c;
   reader->length++;
-
-  return nmea_process(reader);
 }
 
 void nmea_reader_clear(nmea_reader_t *reader) {
@@ -37,7 +39,7 @@ void nmea_reader_clear(nmea_reader_t *reader) {
 	reader->length = 0;
 }
 
-static void nmea_process(nmea_reader_t *reader) {
+void nmea_reader_process(nmea_reader_t *reader) {
 	while (reader->buffer[reader->buffer_start] != '$') {
 		reader->buffer_start++;
 

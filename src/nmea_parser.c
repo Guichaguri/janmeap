@@ -91,7 +91,7 @@ int nmea_read_string(char **message, char *str, int max_length) {
 
 	*message = end + 1;
 
-	return max_length;
+	return length;
 }
 
 bool nmea_read_coordinate(char **message, nmea_coordinate_t *coord, bool deg_3_digits) {
