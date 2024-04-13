@@ -7,10 +7,18 @@ extern "C" {
 
 /**
  * NMEA message buffer max length
+ * Defaults to 82 characters, enough space to fit a single message
+ */
+#ifndef NMEA_MESSAGE_BUFFER_MAX_LENGTH
+#define NMEA_MESSAGE_BUFFER_MAX_LENGTH 82
+#endif // NMEA_BUFFER_MAX_LENGTH
+
+/**
+ * NMEA message buffer max length
  * Defaults to 164 characters, enough space to fit two messages (or partial messages)
  */
 #ifndef NMEA_BUFFER_MAX_LENGTH
-#define NMEA_BUFFER_MAX_LENGTH (82 * 2)
+#define NMEA_BUFFER_MAX_LENGTH (NMEA_MESSAGE_BUFFER_MAX_LENGTH * 2)
 #endif // NMEA_BUFFER_MAX_LENGTH
 
 /**
@@ -39,8 +47,8 @@ extern "C" {
  * Degrees and decimal minutes (DMM): 41 24.2028, 2 10.4418
  */
 typedef struct {
-  uint8_t degrees; // 0-180
-  double decimal_minutes; // 0-60
+	uint8_t degrees; // 0-180
+	double decimal_minutes; // 0-60
 } nmea_coordinate_t;
 
 /**
@@ -48,9 +56,9 @@ typedef struct {
  * The year is composed of two digits (e.g. 2023 would be 23)
  */
 typedef struct {
-  uint8_t date; // 1-31
-  uint8_t month; // 1-12
-  uint8_t year; // 00-99
+	uint8_t date; // 1-31
+	uint8_t month; // 1-12
+	uint8_t year; // 00-99
 } nmea_date_t;
 
 /**
@@ -58,31 +66,40 @@ typedef struct {
  * The number of seconds may have up to two decimal digits.
  */
 typedef struct {
-  uint8_t hours; // 0-24
-  uint8_t minutes; // 0-60
-  float seconds;  // 0-60
+	uint8_t hours; // 0-24
+	uint8_t minutes; // 0-60
+	float seconds;  // 0-60
 } nmea_time_t;
 
 /**
  * Represents all types of error the stream can return
  */
 typedef enum {
-  NMEA_ERROR_CHECKSUM = 1,
-  NMEA_ERROR_BUFFER_OVERFLOW = 2
+	NMEA_ERROR_CHECKSUM = 1,
+	NMEA_ERROR_BUFFER_OVERFLOW = 2
 } nmea_error_t;
 
 typedef void (*nmea_process_message_t)(char *message, int length);
 typedef void (*nmea_process_error_t)(nmea_error_t error_type, char *message, int length);
 
+#if NMEA_BUFFER_MAX_LENGTH > 255
+typedef uint16_t nmea_buffer_index_t;
+#else
+typedef uint8_t nmea_buffer_index_t;
+#endif
+
 /**
  * Represents an NMEA reader instance
  */
 typedef struct {
-  char buffer[NMEA_BUFFER_MAX_LENGTH];
-  uint16_t length;
-  uint16_t buffer_start;
-  nmea_process_message_t process_message;
-  nmea_process_error_t process_error;
+	char buffer[NMEA_BUFFER_MAX_LENGTH];
+	char message[NMEA_MESSAGE_BUFFER_MAX_LENGTH];
+	nmea_buffer_index_t length;
+	nmea_buffer_index_t buffer_head; // head
+	nmea_buffer_index_t buffer_tail; // tail
+	bool buffer_dirty;
+	nmea_process_message_t process_message;
+	nmea_process_error_t process_error;
 } nmea_reader_t;
 
 /**

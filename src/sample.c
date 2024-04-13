@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "nmea.h"
 
 nmea_coordinate_t gps_latitude;
@@ -170,7 +171,7 @@ void main() {
 		"$GPVTG,220.86,T,,M,2.550,N,4.724,K,A*34\r\n";
 
 	for (int i = 0; i < strlen(str); i++) {
-		nmea_reader_add_char(&reader, str[i]);
+		nmea_reader_process_char(&reader, str[i]);
 	}
 
 	printf("Last Lat: %i %f %c\n", gps_latitude.degrees, gps_latitude.decimal_minutes, gps_north_south);
