@@ -14,7 +14,7 @@ extern "C" {
 #endif // NMEA_BUFFER_MAX_LENGTH
 
 /**
- * NMEA message buffer max length
+ * NMEA character buffer max length
  * Defaults to 164 characters, enough space to fit two messages (or partial messages)
  */
 #ifndef NMEA_BUFFER_MAX_LENGTH
@@ -62,7 +62,7 @@ typedef struct {
 } nmea_date_t;
 
 /**
- * Represents a time.
+ * Represents a timestamp.
  * The number of seconds may have up to two decimal digits.
  */
 typedef struct {

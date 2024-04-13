@@ -13,6 +13,8 @@ An NMEA 0183 streaming and parsing library written in plain C.
 
 ## Usage
 
+The functions available are documented in [nmea.h](./src/nmea.h).
+
 ### Streaming
 
 ```c
@@ -86,7 +88,34 @@ void process_nmea_msg(char *message, int length) {
 
 A full and functional example can be seen in the `sample.c` file.
 
-### Streaming with STM32 UART
+### Parallel streaming
+
+The library allows you to buffer characters separated from the processing pipeline. This allows appending characters in interruptions (which must be as fast as possible), while processing the messages in the main loop.
+
+Here's an example:
+```c
+nmea_reader_t reader;
+
+void main() {
+    // Creates the reader
+    nmea_reader_init(&reader, process_nmea_msg);
+
+    while (1) {
+        // Processes the buffer in case there are full messages available, otherwise, does nothing
+        // The process_nmea_msg function will be called here
+        nmea_reader_process(&reader);
+        sleep(0.1);
+    }
+}
+
+// The interrupt function or event listener that is called when new characters are received
+void itr_serial_rx_data(char ch) {
+    // Appends a character to the buffer to be processed later in the main loop
+    nmea_reader_add_char(&reader, ch);
+}
+```
+
+### Parallel streaming with STM32 UART
 
 This is a more practical example that uses the STM32 UART HAL library to read one character by one and feed it to the library
 
@@ -105,7 +134,7 @@ void main() {
     HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
 
     while(1) {
-        // Processes the buffer if there is full messages available
+        // Processes the buffer if there are full messages available
         nmea_reader_process(&reader);
     }
 }
@@ -113,7 +142,6 @@ void main() {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     // Called when the UART completes reading
     // Appends a character to the buffer and request the next one
-
     nmea_reader_add_char(&reader, gps_buffer);
     HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
 }
