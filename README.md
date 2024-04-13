@@ -32,12 +32,12 @@ void main() {
     nmea_reader_init(&reader, process_nmea_msg);
     nmea_reader_set_error_callback(&reader, process_nmea_error);
 
-    nmea_reader_add_char(&reader, '$');
-    nmea_reader_add_char(&reader, 'G');
-    nmea_reader_add_char(&reader, 'N');
-    nmea_reader_add_char(&reader, 'G');
-    nmea_reader_add_char(&reader, 'L');
-    nmea_reader_add_char(&reader, 'L');
+    nmea_reader_process_char(&reader, '$');
+    nmea_reader_process_char(&reader, 'G');
+    nmea_reader_process_char(&reader, 'N');
+    nmea_reader_process_char(&reader, 'G');
+    nmea_reader_process_char(&reader, 'L');
+    nmea_reader_process_char(&reader, 'L');
     // ...
 }
 ```
@@ -93,7 +93,6 @@ This is a more practical example that uses the STM32 UART HAL library to read on
 ```c
 nmea_reader_t reader;
 char gps_buffer;
-bool gps_done = 0;
 
 void main() {
     // Peripheral setup
@@ -106,23 +105,17 @@ void main() {
     HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
 
     while(1) {
-
-        if (uart_done) {
-            // Appends the read char to the reader
-            nmea_reader_add_char(&reader, gps_buffer);
-
-            // Receives a new char
-            uart_done = 0;
-            HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
-        }
-
+        // Processes the buffer if there is full messages available
+        nmea_reader_process(&reader);
     }
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     // Called when the UART completes reading
-    // Sets the flag to process the character in the next main loop
-    uart_done = 1;
+    // Appends a character to the buffer and request the next one
+
+    nmea_reader_add_char(&reader, gps_buffer);
+    HAL_UART_Receive_IT(&huart1, (uint8_t*) &gps_buffer, 1);
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
